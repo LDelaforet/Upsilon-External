@@ -24,6 +24,7 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
   $scope.apps = apps;
   $scope.selectedApps = [];
   $scope.customFiles = [];
+  $scope.localApps = [];
   $scope.webUSB = typeof navigator.usb !== 'undefined';
 
   $scope.reload = function reload() {
@@ -318,14 +319,50 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
             binary: normalized
           };
         }
-        tar.addFileArrayBuffer(file.name, file.binary, {mode: "664"});
+		
+		if(file.name.endsWith(".locapp")) {
+          console.log("Normalizing", file.name.replace(".locapp",""));
+          tar.addFileArrayBuffer(file.name.replace(".locapp",""), file.binary, {mode: "775"});
+        } else {
+			tar.addFileArrayBuffer(file.name, file.binary, {mode: "664"});
+		}
       }
 
       console.log("Build archive done");
       return tar.write();
     }
   }
+  let downloadArchive = async function downloadArchive(file){
+	    var downloadBlob, downloadURL;
 
+		downloadBlob = function(data, fileName, mimeType) {
+		  var blob, url;
+		  blob = new Blob([data], {
+			type: mimeType
+		  });
+		  url = window.URL.createObjectURL(blob);
+		  downloadURL(url, fileName);
+		  setTimeout(function() {
+			return window.URL.revokeObjectURL(url);
+		  }, 1000);
+		};
+
+		downloadURL = function(data, fileName) {
+		  var a;
+		  a = document.createElement('a');
+		  a.href = data;
+		  a.download = fileName;
+		  document.body.appendChild(a);
+		  a.style = 'display: none';
+		  a.click();
+		  a.remove();
+		};
+		
+		
+		downloadBlob(file, 'archive.tar', 'application/octet-stream');
+  }
+  
+  
   let uploadFile = async function uploadFile(selectedDevice, dfuDescriptor, file, manifest) {
     console.log("uploading", dfuDescriptor);
     let interfaces = dfu.findDeviceDfuInterfaces(selectedDevice);
@@ -424,7 +461,13 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
       });
     });
   };
-
+  
+  $scope.download = function download() {
+    (async () => {
+    let archive = await buildArchive($scope.selectedApps, $scope.wallpaper, $scope.customFiles);
+    await downloadArchive(archive);
+	})();
+  };
   $scope.getFile = function getFile(el) {
     for (let i = 0; i < el[0].files.length; i++) {
       let file = el[0].files[i];
@@ -463,7 +506,6 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
       })
     }
   }
-  
 }).directive("ngWallpaperSelect", function() {
   return {
     link: function($scope, el) {
@@ -486,9 +528,11 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
       REMOVE: 'Remove',
       CUSTOM_FILE: 'Custom file',
       INSTALL: 'Install',
+	  DOWNLOAD: 'Download archive',
       WALLPAPER: "Wallpaper",
       WALLPAPER_FILE: 'Image file',
       AVAILABLE_APPLICATIONS: 'Available applications',
+	  ADD_APP: 'Add a custom application',
       ADD: 'Add',
       ACKNOWLEDGMENTS: 'Acknowledgments',
       ALL_DONE: 'All done, click here to reload the page.',
@@ -501,8 +545,10 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
       DFU_WROTE: "Done",
       TOO_MUCH_FILES: "Not enough space on the device",
       OR: "or",
+	  LOCAL_APP_NAME: "App name: ",
       CROP_IMAGE_TITLE: "Crop wallpaper",
       CROP_IMAGE_SAVE: "Save",
+	  LOCAL_APP: "Local application",
       CANCEL: "Cancel",
       CONTINUE: "Continue",
       TOO_BIG_FILES: "You are writing a large amount of files to your calculator. If you are using a recent version of Upsilon, you must go through the bootloader (reset button on the back) to make sure that the files will not be written over running code.",
@@ -520,10 +566,12 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
       REMOVE: 'Supprimer',
       CUSTOM_FILE: 'Fichier local',
       INSTALL: 'Installer',
+	  DOWNLOAD: 'Télécharger l\'archive',
       WALLPAPER: 'Fond d\'écran',
       WALLPAPER_FILE: 'Fichier image',
       AVAILABLE_APPLICATIONS: 'Applications disponibles',
       ADD: 'Ajouter',
+	  ADD_APP: 'Ajouter une application locale',
       ACKNOWLEDGMENTS: 'Remerciements',
       ALL_DONE: 'Terminé, cliquez ici pour recharger la page.',
       ERROR: 'Une erreur est survenue',
@@ -535,8 +583,10 @@ angular.module('nwas', ['ngSanitize', 'pascalprecht.translate']).controller('mai
       DFU_WROTE: "Terminé",
       TOO_MUCH_FILES: "Pas assez de place sur l'appareil",
       OR: "ou",
+	  LOCAL_APP_NAME: "Nom de l'application: ",
       CROP_IMAGE_TITLE: "Recadrer le fond d'écran",
       CROP_IMAGE_SAVE: "Sauvegarder",
+	  LOCAL_APP: "Application locale",
       CANCEL: "Annuler",
       TOO_BIG_FILES: "Vous écrivez une grande quantité de fichiers sur votre calculatrice. Si vous utilisez une version récente d'Upsilon, vous devez passer par le bootloader (bouton de réinitialisation à l'arrière) pour vous assurer que les fichiers ne seront pas écrits dans du code en cours d'exécution.",
       UNABLE_TO_CLAIM_INTERFACE: "Impossible de réclamer l'interface. Veuillez vous assurer qu'aucun autre onglet ou application n'utilise la calculatrice.",

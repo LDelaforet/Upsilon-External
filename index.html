@@ -85,8 +85,9 @@ Copyright (C) 2019 Damien Nicolet
           </div>
 
           <button class="btn btn-primary btn-lg btn-block" ng-click="upload()" translate="INSTALL"></button>
+		  <br/>
+          <button class="btn btn-primary btn-lg btn-block" ng-click="download()" translate="DOWNLOAD"></button>
         </div>
-
         <div class="col-md-8 order-md-1">
           <h4 class="mb-3" translate="WALLPAPER"></h4>
           <div class="card p-2 mb-3">
@@ -97,7 +98,16 @@ Copyright (C) 2019 Damien Nicolet
               </div>
             </div>
           </div>
+		  
           <h4 class="mb-3" translate="AVAILABLE_APPLICATIONS"></h4>
+			<div class="card p-2 mb-3">
+				<div>
+					<div class="custom-file">
+						<input id="locapp-file-input" type="file" accept=".locapp" class="custom-file-input" lang="{{locale}}" ng-file-select>
+						<label class="custom-file-label" id="locapp_lab-name" translate="ADD_APP"></label>
+					</div>
+				</div>
+			</div>
             <div class="row pb-3">
               <div class="col-md-12">
 
@@ -159,11 +169,12 @@ Copyright (C) 2019 Damien Nicolet
           </div>
         </div>
       </div>
-
+	  
       <footer class="my-5 pt-5 text-muted text-center text-small">
         <p class="mb-1" translate="ACKNOWLEDGMENTS"></p>
         <ul class="list-inline">
           <li class="list-inline-item"><a href="https://www.numworks.com/">NumWorks</a></li>
+		  <li class="list-inline-item"><a href="https://github.com/Omega-Numworks">Omega</a></li>
           <li class="list-inline-item"><a href="https://github.com/devanlai/webdfu">webdfu</a></li>
           <li class="list-inline-item"><a href="https://www.gnu.org/software/binutils/">GNU Binutils</a></li>
           <li class="list-inline-item"><a href="https://emscripten.org/">emscripten</a></li>
